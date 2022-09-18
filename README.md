@@ -12,7 +12,9 @@
 
 
 <h1 align="center"></h1>
-<p>projeto criado na semana da NLW eSports rocketseat, criado com rolagem dos games lateral de mause - (Swiper react) e validação no form com react-hook-form</p>
+<p>Projeto criado na semana da NLW eSports rocketseat</p>
+
+<p>Upgrades que eu fiz, rolagem dos games lateral de mause - (Swiper react) e validação no form com (react-hook-form)</p>
 
 **🛠️ BUILT WITH**
 
