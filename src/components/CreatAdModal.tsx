@@ -4,6 +4,7 @@ import * as Select from '@radix-ui/react-select';
 import * as ToggleGroup from '@radix-ui/react-toggle-group';
 
 import { yupResolver } from '@hookform/resolvers/yup';
+import classNames from 'classnames';
 import { CaretDown, Check, GameController } from 'phosphor-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -22,36 +23,73 @@ type Inputs = {
   yearsPlaying: string;
   hoursStart: string;
   hourEnd: string;
+  game: any;
 };
 
 export function CreatAdModal() {
   const [data, setData] = useState<GameType[]>([]);
-  const [weekDays, setWeekDays] = useState<string[]>([]);
+  const [weekDays, setWeekDays] = useState<string[]>(['0', '2', '4']);
   const [voiceChannel, setVoiceChannel] = useState(false);
-  const [selectGame, setSelectGame] = useState('');
+  const [errorWeekDays, setErrorWeekDays] = useState(false);
+
+  useEffect(() => {
+    setErrorWeekDays(false);
+  }, [weekDays]);
 
   const schema = yup
     .object({
-      name: yup.string().required(),
-      discord: yup.string().required(),
-      yearsPlaying: yup.number().required(),
-      hoursStart: yup.string().required(),
-      hourEnd: yup.string().required(),
+      name: yup.string().required('Name is required'),
+      discord: yup.string().required('Discord is required'),
+      yearsPlaying: yup.string().required('Anos de jogo is required'),
+      hoursStart: yup.string().required('HorarioStart is required'),
+      hourEnd: yup.string().required('HorarioEnd is required'),
+      game: yup.string().required('Game is required'),
     })
     .required();
 
   const {
     register,
     handleSubmit,
+    setValue,
+    resetField,
     formState: { errors },
   } = useForm<Inputs>({
     resolver: yupResolver(schema),
   });
 
-  function submit(data: Inputs) {
-    console.log(data);
-    console.log(voiceChannel);
-    console.log(selectGame);
+  function resetFields() {
+    resetField('game');
+    resetField('hourEnd');
+    resetField('hoursStart');
+    resetField('name');
+    resetField('yearsPlaying');
+    resetField('discord');
+  }
+
+  async function submit(data: Inputs) {
+    if (weekDays.length < 1) {
+      setErrorWeekDays(true);
+      return;
+    }
+
+    try {
+      await api.post(`games/${data.game}/ads`, {
+        weekDays: weekDays.map(Number),
+        name: data.name,
+        discord: data.discord,
+        useVoiceChannel: voiceChannel ? true : false,
+        yearsPlaying: Number(data.yearsPlaying),
+        hoursStart: data.hoursStart,
+        hourEnd: data.hourEnd,
+      });
+
+      setWeekDays(['0', '2', '4']);
+      setVoiceChannel(false);
+      resetFields();
+    } catch (error) {
+      alert('Erro ao criar o anucio');
+      console.log(error);
+    }
   }
 
   useEffect(() => {
@@ -70,17 +108,32 @@ export function CreatAdModal() {
         </Dialog.Title>
 
         <form onSubmit={handleSubmit(submit)} className="mt-8">
-          <div className="w-full flex flex-col gap-2 mb-2">
-            <label className="font-semibold" htmlFor="game">
+          <div className="w-full flex flex-col mb-2">
+            <label className="font-semibold mb-2" htmlFor="game">
               Qual o game?
             </label>
 
-            <Select.Root onValueChange={setSelectGame}>
-              <Select.Trigger className="outline-none text-zinc-500 font-normal text-[14px] bg-zinc-900 w-full rounded py-3 px-4 flex items-center justify-between">
+            <Select.Root
+              {...(register('game'),
+              {
+                onValueChange: (value) => {
+                  setValue('game', value);
+                },
+              })}
+            >
+              <Select.Trigger
+                className={classNames(
+                  'outline-none text-zinc-500 font-normal text-[14px] bg-zinc-900 w-full rounded py-3 px-4 flex items-center justify-between',
+                  {
+                    'text-red-500 border border-red-500': errors.game?.message,
+                  }
+                )}
+              >
                 <Select.Value
                   className="font-normal text-[14px]"
                   placeholder="Selecione o game que deseja jogar"
                 />
+
                 <Select.Icon>
                   <CaretDown fontSize={24} />
                 </Select.Icon>
@@ -115,10 +168,13 @@ export function CreatAdModal() {
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
+            <p className="text-red-500 font-semibold text-xs">
+              {errors.game?.message as string}
+            </p>
           </div>
 
-          <div className="w-full flex flex-col gap-2 mb-2">
-            <label className="font-semibold" htmlFor="name">
+          <div className="w-full flex flex-col mb-2">
+            <label className="font-semibold mb-2" htmlFor="name">
               Seu nome (ou nickname)
             </label>
             <Input
@@ -127,26 +183,46 @@ export function CreatAdModal() {
               type="text"
               id="name"
               registerinput={register('name')}
+              typeinput={
+                (errors.name?.message?.length as number) > 0
+                  ? 'error'
+                  : 'normal'
+              }
+              messageerro={
+                (errors.name?.message?.length as number) > 0
+                  ? errors.name?.message
+                  : null
+              }
             />
-            <p className="text-red-500">{errors.name?.message}</p>
           </div>
 
           <div className="w-full min-h-min flex gap-6">
-            <div className="w-full flex flex-col gap-2 mb-2">
-              <label className="font-semibold" htmlFor="yearsPlaying">
+            <div className="w-full flex flex-col mb-2">
+              <label className="font-semibold mb-2" htmlFor="yearsPlaying">
                 Joga há quantos anos?
               </label>
+
               <Input
                 registerinput={register('yearsPlaying')}
                 placeholder="Tudo bem ser ZERO"
                 className="placeholder:text-zinc-500 font-normal text-[14px] bg-zinc-900 w-full h-[50px] rounded py-4 px-3"
                 type="number"
                 id="yearsPlaying"
+                typeinput={
+                  (errors.yearsPlaying?.message?.length as number) > 0
+                    ? 'error'
+                    : 'normal'
+                }
+                messageerro={
+                  (errors.yearsPlaying?.message?.length as number) > 0
+                    ? errors.yearsPlaying?.message
+                    : null
+                }
               />
             </div>
 
-            <div className="w-full flex flex-col gap-2 mb-2">
-              <label className="font-semibold" htmlFor="discord">
+            <div className="w-full flex flex-col  mb-2">
+              <label className="font-semibold mb-2" htmlFor="discord">
                 Qual seu Discord?
               </label>
               <Input
@@ -155,13 +231,23 @@ export function CreatAdModal() {
                 className="placeholder:text-zinc-500 font-normal text-[14px] bg-zinc-900 w-full h-[50px] rounded py-4 px-3"
                 type="text"
                 id="discord"
+                typeinput={
+                  (errors.discord?.message?.length as number) > 0
+                    ? 'error'
+                    : 'normal'
+                }
+                messageerro={
+                  (errors.discord?.message?.length as number) > 0
+                    ? errors.discord?.message
+                    : null
+                }
               />
             </div>
           </div>
 
           <div className="mb-6 flex gap-6">
-            <div className="flex flex-col gap-2">
-              <label className="font-semibold" htmlFor="weekDays">
+            <div className="flex flex-col mb-2">
+              <label className="font-semibold mb-2" htmlFor="weekDays">
                 Quando costuma jogar?
               </label>
 
@@ -175,7 +261,7 @@ export function CreatAdModal() {
                   value="0"
                   title="Domingo"
                   className={`w-8 h-8 rounded  ${
-                    weekDays.includes('0') ? 'bg-violet-500' : 'bg-zinc-900'
+                    weekDays.includes('0') ? 'bg-violet-500 ' : 'bg-zinc-900'
                   }`}
                 >
                   D
@@ -184,7 +270,7 @@ export function CreatAdModal() {
                   value="1"
                   title="Segunda"
                   className={`w-8 h-8 rounded  ${
-                    weekDays.includes('1') ? 'bg-violet-500' : 'bg-zinc-900'
+                    weekDays.includes('1') ? 'bg-violet-500 ' : 'bg-zinc-900'
                   }`}
                 >
                   S
@@ -238,28 +324,55 @@ export function CreatAdModal() {
                   S
                 </ToggleGroup.Item>
               </ToggleGroup.Root>
+              <p className="text-red-500 font-semibold text-sm">
+                {errorWeekDays ? 'dia de jogo is required' : ''}
+              </p>
             </div>
 
-            <div className="flex gap-2 flex-col flex-1 w-[100px]">
-              <label className="font-semibold" htmlFor="hourStart">
+            <div className="flex  flex-col flex-1 w-[100px]">
+              <label className="font-semibold mb-2" htmlFor="hourStart">
                 Qual horário do dia?
               </label>
               <div className="flex gap-2 items-center">
-                <Input
-                  registerinput={register('hoursStart')}
-                  className="bg-zinc-900 font-normal text-[14px] text-zinc-500 rounded"
-                  id="hoursStart"
-                  type="time"
-                  placeholder="De"
-                />
+                <div className="w-full flex items-center flex-col">
+                  <Input
+                    registerinput={register('hoursStart')}
+                    className="bg-zinc-900 font-normal text-[14px] text-zinc-500 rounded"
+                    id="hoursStart"
+                    type="time"
+                    placeholder="De"
+                    typeinput={
+                      (errors.hoursStart?.message?.length as number) > 0
+                        ? 'error'
+                        : 'normal'
+                    }
+                    messageerro={
+                      (errors.hoursStart?.message?.length as number) > 0
+                        ? errors.hoursStart?.message
+                        : null
+                    }
+                  />
+                </div>
 
-                <Input
-                  registerinput={register('hourEnd')}
-                  className="bg-zinc-900 font-normal text-[14px] text-zinc-500 rounded"
-                  id="hourEnd"
-                  type="time"
-                  placeholder="Até"
-                />
+                <div>
+                  <Input
+                    registerinput={register('hourEnd')}
+                    className="bg-zinc-900 font-normal text-[14px] text-zinc-500 rounded"
+                    id="hourEnd"
+                    type="time"
+                    placeholder="Até"
+                    typeinput={
+                      (errors.hourEnd?.message?.length as number) > 0
+                        ? 'error'
+                        : 'normal'
+                    }
+                    messageerro={
+                      (errors.hourEnd?.message?.length as number) > 0
+                        ? errors.hourEnd?.message
+                        : null
+                    }
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -283,7 +396,10 @@ export function CreatAdModal() {
             Costumo me conectar ao chat de voz
           </label>
           <div className="flex gap-4 items-center justify-end">
-            <Dialog.Close className="bg-zinc-500 hover:bg-zinc-400 transition-colors rounded-md py-3 px-5 text-base font-semibold">
+            <Dialog.Close
+              onClick={resetFields}
+              className="bg-zinc-500 hover:bg-zinc-400 transition-colors rounded-md py-3 px-5 text-base font-semibold"
+            >
               Cancelar
             </Dialog.Close>
             <button

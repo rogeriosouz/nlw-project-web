@@ -6,6 +6,9 @@ import { CreatAdBanner } from './components/CreatAdBanner';
 import { CreatAdModal } from './components/CreatAdModal';
 
 import { GameBanner } from './components/GameBanner';
+import { SwiperComponent } from './components/SwiperComponent';
+
+import { SwiperSlide } from 'swiper/react';
 
 type GameType = {
   bannerUrl: string;
@@ -35,7 +38,8 @@ export function App() {
         </span>{' '}
         está aqui.
       </h1>
-      <div className="grid grid-cols-6 gap-6 mt-16">
+
+      {/* <div className="grid grid-cols-6 gap-6 mt-16">
         {data.map((item) => (
           <GameBanner
             key={item.id}
@@ -44,6 +48,21 @@ export function App() {
             title={item.title}
           />
         ))}
+      </div> */}
+
+      <div className="w-full flex items-center justify-center flex-1  mt-16">
+        <SwiperComponent>
+          {data.map((item) => (
+            <SwiperSlide>
+              <GameBanner
+                key={item.id}
+                adsCount={item._count?.Ad}
+                bannerUrl={item.bannerUrl}
+                title={item.title}
+              />
+            </SwiperSlide>
+          ))}
+        </SwiperComponent>
       </div>
 
       <Dialog.Root>
