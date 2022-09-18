@@ -17,7 +17,8 @@ export function SwiperComponent({ children }: any) {
       slidesPerView={6}
       breakpoints={{
         300: {
-          slidesPerView: 1,
+          slidesPerView: 2,
+          spaceBetween: 20,
         },
         640: {
           slidesPerView: 2,

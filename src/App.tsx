@@ -29,9 +29,9 @@ export function App() {
   }, []);
 
   return (
-    <div className="max-w-[1344px] mx-auto  flex flex-col items-center my-20">
+    <div className="px-3 max-w-[1344px] mx-auto  flex flex-col items-center my-20">
       <img src={logo} alt="Logo.png" />
-      <h1 className="text-6xl text-white font-black mt-20">
+      <h1 className="text-center text-6xl text-white font-black mt-20">
         Seu{' '}
         <span className="text-transparent bg-nlw-gradient bg-clip-text">
           duo
@@ -42,7 +42,7 @@ export function App() {
       <div className="w-full flex items-center justify-center flex-1  mt-16">
         <SwiperComponent>
           {data.map((item) => (
-            <SwiperSlide>
+            <SwiperSlide key={item.id}>
               <GameBanner
                 key={item.id}
                 adsCount={item._count?.Ad}
