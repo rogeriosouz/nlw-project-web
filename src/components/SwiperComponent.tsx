@@ -14,8 +14,21 @@ export function SwiperComponent({ children }: any) {
   return (
     <Swiper
       modules={[Navigation, Pagination, A11y, Keyboard, Mousewheel]}
-      spaceBetween={0}
       slidesPerView={6}
+      breakpoints={{
+        300: {
+          slidesPerView: 1,
+        },
+        640: {
+          slidesPerView: 2,
+        },
+        768: {
+          slidesPerView: 4,
+        },
+        1024: {
+          slidesPerView: 6,
+        },
+      }}
       mousewheel={true}
     >
       {children}

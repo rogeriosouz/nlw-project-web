@@ -39,17 +39,6 @@ export function App() {
         está aqui.
       </h1>
 
-      {/* <div className="grid grid-cols-6 gap-6 mt-16">
-        {data.map((item) => (
-          <GameBanner
-            key={item.id}
-            adsCount={item._count?.Ad}
-            bannerUrl={item.bannerUrl}
-            title={item.title}
-          />
-        ))}
-      </div> */}
-
       <div className="w-full flex items-center justify-center flex-1  mt-16">
         <SwiperComponent>
           {data.map((item) => (
